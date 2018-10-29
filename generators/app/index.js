@@ -4,6 +4,7 @@ const semver = require('semver');
 const BaseGenerator = require('generator-jhipster/generators/generator-base');
 const jhipsterConstants = require('generator-jhipster/generators/generator-constants');
 const jhipsterUtils = require('generator-jhipster/generators/utils');
+const shelljs = require('shelljs');
 
 module.exports = class extends BaseGenerator {
     get initializing() {
@@ -32,6 +33,12 @@ module.exports = class extends BaseGenerator {
                 const minimumJhipsterVersion = packagejs.dependencies['generator-jhipster'];
                 if (!semver.satisfies(currentJhipsterVersion, minimumJhipsterVersion)) {
                     this.warning(`\nYour generated project used an old JHipster version (${currentJhipsterVersion})... you need at least (${minimumJhipsterVersion})\n`);
+                }
+            },
+            checkGitFolder() {
+                const gitDir = '.git';
+                if (! shelljs.test('-d', gitDir)) {
+                    this.error('\Your generated project shall be configured with git\n');
                 }
             }
         };
@@ -96,7 +103,7 @@ module.exports = class extends BaseGenerator {
 
         this.updateApplicationYml = function () {
             const applicationFile = `${jhipsterConstants.SERVER_MAIN_RES_DIR}config/application.yml`;
-            const resourcesBlock = 'appVersion : #jgitver.calculated_version#';
+            const resourcesBlock = 'appVersion: #project.version#';
             try {
                 jhipsterUtils.rewriteFile(
                     {
@@ -114,10 +121,15 @@ module.exports = class extends BaseGenerator {
 
         this.updateVersionParser = function () {
             const utilsFile = 'webpack/utils.js';
-            const buildDir = 'target';
-            let newParserContent = `// return the version number from ${buildDir} 'application.yml' file\n`;
+            let buildFolder;
+            if (this.buildTool === 'gradle') {
+                buildFolder = 'build';
+            } else {
+                buildFolder = 'target';
+            }
+            let newParserContent = `// return the version number from ${buildFolder} 'application.yml' file\n`;
             newParserContent += 'function parseVersion() {\n';
-            newParserContent += `    const appPathFile = '${buildDir}/classes/config/application.yml';\n`;
+            newParserContent += `    const appPathFile = '${buildFolder}/classes/config/application.yml';\n`;
             newParserContent += '    const versionRegex = /^appVersion:\s*(.*$)/gm;\n';
             newParserContent += '    const appFile = fs.readFileSync(appPathFile, \'utf8\');\n';
             newParserContent += '    return versionRegex.exec(appFile)[1];\n';
