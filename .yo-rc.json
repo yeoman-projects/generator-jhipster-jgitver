@@ -1,0 +1,10 @@
+{
+  "generator-jhipster-module": {
+    "promptValues": {
+      "githubName": "MSaguer",
+      "authorName": "Marc Saguer",
+      "authorEmail": "saguermarc@gmail.com",
+      "authorUrl": "https://github.com/MSaguer"
+    }
+  }
+}
