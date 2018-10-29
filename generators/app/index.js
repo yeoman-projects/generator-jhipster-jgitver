@@ -94,6 +94,47 @@ module.exports = class extends BaseGenerator {
             }
         };
 
+        this.updateApplicationYml = function () {
+            const applicationFile = `${jhipsterConstants.SERVER_MAIN_RES_DIR}config/application.yml`;
+            const resourcesBlock = 'appVersion : #jgitver.calculated_version#';
+            try {
+                jhipsterUtils.rewriteFile(
+                    {
+                        file: applicationFile,
+                        needle: '# application:',
+                        splicable: [resourcesBlock]
+                    },
+                    this
+                );
+            } catch (e) {
+                this.log(chalk.yellow('\nUnable to find ') + applicationFile + chalk.yellow(' is not updated\n'));
+                this.debug('Error:', e);
+            }
+        };
+
+        this.updateVersionParser = function () {
+            const utilsFile = 'webpack/utils.js';
+            const buildDir = 'target';
+            let newParserContent = `// return the version number from ${buildDir} 'application.yml' file\n`;
+            newParserContent += 'function parseVersion() {\n';
+            newParserContent += `    const appPathFile = '${buildDir}/classes/config/application.yml';\n`;
+            newParserContent += '    const versionRegex = /^appVersion:\s*(.*$)/gm;\n';
+            newParserContent += '    const appFile = fs.readFileSync(appPathFile, \'utf8\');\n';
+            newParserContent += '    return versionRegex.exec(appFile)[1];\n';
+            newParserContent += '}';
+            try {
+                jhipsterUtils.replaceContent({
+                    file: utilsFile,
+                    pattern: /const parseString[\s\S]*?return version;\n}/m,
+                    regex: true,
+                    content: newParserContent
+                }, this);
+            } catch (e) {
+                this.log(chalk.yellow('\nUnable to find ') + utilsFile + chalk.yellow(' is not updated\n'));
+                this.debug('Error:', e);
+            }
+        }
+
         this.jgitver_mavenLike = true;
         this.jgitver_autoIncrementPatch = true;
         this.jgitver_useCommitDistance = true;
@@ -103,6 +144,9 @@ module.exports = class extends BaseGenerator {
             this.template('extensions.exml', '.mvn/extensions.xml');
             this.template('jgitver.config.exml', '.mvn/jgitver.config.xml');
             this.updatePom();
+            this.updateApplicationYml();
+            this.updateVersionParser();
+
         }
         if (this.buildTool === 'gradle') {
             this.error('Gradle option is not already implemented');
