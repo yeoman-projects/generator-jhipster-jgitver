@@ -1,0 +1,17 @@
+{
+    "client": {
+      "added": [
+        ".mvn/extensions.xml",
+        ".mvn/jgitver.config.xml"
+      ],
+      "addedTests": [
+      ],
+      "skipped": [
+      ],
+      "changed": [
+        "pom.xml",
+        "src/main/resources/config/application.yml",
+        "webpack/utils.js"
+      ]
+    }
+  }

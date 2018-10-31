@@ -6,18 +6,21 @@ const BaseGenerator = require('generator-jhipster/generators/generator-base');
 const jhipsterConstants = require('generator-jhipster/generators/generator-constants');
 const packagejs = require('../../package.json');
 
+const JGITVER_VER_GRADLE = '0.6.1';
+// JGITVER maven plugin version is defined in extensions.exml file
+
 module.exports = class extends BaseGenerator {
     get initializing() {
         return {
             init(args) {
                 if (args === 'default') {
-                    // do something when argument is 'default'
+                    // Nothing to do
                 }
             },
             readConfig() {
                 this.jhipsterAppConfig = this.getAllJhipsterConfig();
-                if (!this.jhipsterAppConfig) {
-                    this.error('Can\'t read .yo-rc.json');
+                if (!this.jhipsterAppConfig.buildTool) {
+                    this.error('Cannot read build tool in .yo-rc.json');
                 }
             },
             displayLogo() {
@@ -38,7 +41,7 @@ module.exports = class extends BaseGenerator {
             checkGitFolder() {
                 const gitDir = '.git';
                 if (!shelljs.test('-d', gitDir)) {
-                    this.error('\Your generated project shall be configured with git\n');
+                    this.error('Your generated project shall be configured with git');
                 }
             }
         };
@@ -57,9 +60,6 @@ module.exports = class extends BaseGenerator {
         // read config from .yo-rc.json
         this.buildTool = this.jhipsterAppConfig.buildTool;
 
-        // use constants from generator-constants.js
-        const resourceDir = jhipsterConstants.SERVER_MAIN_RES_DIR;
-
         // show all variables
         this.log('\n--- some config read from config ---');
         this.log(`buildTool=${this.buildTool}`);
@@ -71,7 +71,7 @@ module.exports = class extends BaseGenerator {
             try {
                 jhipsterUtils.replaceContent({
                     file: pomFile,
-                    pattern: /(\s{4}<groupId>\S*<\/groupId>\n\s{4}<artifactId>\S*?<\/artifactId>\n\s{4}<version>)\S*?(<\/version>)/m,
+                    pattern: /(\s{4}<groupId>\S*<\/groupId>\r?\n\s{4}<artifactId>\S*?<\/artifactId>\r?\n\s{4}<version>)\S*?(<\/version>)/m,
                     regex: true,
                     content: '$10.0.0$2'
                 }, this);
@@ -87,11 +87,11 @@ module.exports = class extends BaseGenerator {
             try {
                 jhipsterUtils.replaceContent({
                     file: gradleFile,
-                    pattern: /(group = '\S*?\nversion = ')\S*/g,
+                    pattern: /(group = '\S*?\r?\nversion = ')\S*/g,
                     regex: true,
                     content: '$10.0.0\''
                 }, this);
-                this.addGradlePluginToPluginsBlock('fr.brouillard.oss.gradle.jgitver', '0.4.1');
+                this.addGradlePluginToPluginsBlock('fr.brouillard.oss.gradle.jgitver', JGITVER_VER_GRADLE);
             } catch (e) {
                 this.log(chalk.yellow('\nUnable to find ') + gradleFile + chalk.yellow(' is not updated\n'));
                 this.debug('Error:', e);
@@ -125,17 +125,17 @@ module.exports = class extends BaseGenerator {
             let readPattern;
             if (this.buildTool === 'gradle') {
                 buildFile = 'build/resources/main/META-INF/build-info.properties';
-                patternSearch = /\/\/ Returns the second occurrence of the[\s\S]*?versionRegex.exec\(buildGradle\)\[1\];\n}/m;
+                patternSearch = /\/\/ Returns the second occurrence of the[\s\S]*?versionRegex.exec\(buildGradle\)\[1\];\r?\n}/m;
                 readPattern = 'build.version=';
             } else {
                 buildFile = 'target/classes/config/application.yml';
-                patternSearch = /const parseString[\s\S]*?return version;\n}/m;
+                patternSearch = /const parseString[\s\S]*?return version;\r?\n}/m;
                 readPattern = 'appVersion:';
             }
             let newParserContent = `// return the version number from '${buildFile}' file\n`;
             newParserContent += 'function parseVersion() {\n';
             newParserContent += `    const appPathFile = '${buildFile}';\n`;
-            newParserContent += `    const versionRegex = /^${readPattern}\s*(.*$)/gm;\n`;
+            newParserContent += `    const versionRegex = /^${readPattern}\\s*(.*$)/gm;\n`;
             newParserContent += '    const appFile = fs.readFileSync(appPathFile, \'utf8\');\n';
             newParserContent += '    return versionRegex.exec(appFile)[1];\n';
             newParserContent += '}';
@@ -150,23 +150,22 @@ module.exports = class extends BaseGenerator {
                 this.log(chalk.yellow('\nUnable to find ') + utilsFile + chalk.yellow(' is not updated\n'));
                 this.debug('Error:', e);
             }
-        }
+        };
 
-        // JgitVer options set in the configuration file
-        // TODO : Adapt the configuration to gradle build
-        this.jgitver_mavenLike = true;
-        this.jgitver_autoIncrementPatch = true;
-        this.jgitver_useCommitDistance = true;
-        this.jgitver_useDirty = true;
 
         if (this.buildTool === 'maven') {
+            // JgitVer options set in the configuration file
+            this.jgitver_mavenLike = true;
+            this.jgitver_autoIncrementPatch = true;
+            this.jgitver_useCommitDistance = true;
+            this.jgitver_useDirty = true;
+
             // Activate JGitVer at maven build startup
             this.template('maven/jgitver.config.exml', '.mvn/jgitver.config.xml');
             // Add the JGitVer configuration file
             this.template('maven/extensions.exml', '.mvn/extensions.xml');
             this.updatePom();
             this.updateApplicationYml();
-
         }
         if (this.buildTool === 'gradle') {
             this.updateGradle();
@@ -175,12 +174,10 @@ module.exports = class extends BaseGenerator {
     }
 
     install() {
-        let logMsg =
-            `To install your dependencies manually, run: ${chalk.yellow.bold(`${this.clientPackageManager} install`)}`;
+        let logMsg = `To install your dependencies manually, run: ${chalk.yellow.bold(`${this.clientPackageManager} install`)}`;
 
         if (this.clientFramework === 'angular1') {
-            logMsg =
-                `To install your dependencies manually, run: ${chalk.yellow.bold(`${this.clientPackageManager} install & bower install`)}`;
+            logMsg = `To install your dependencies manually, run: ${chalk.yellow.bold(`${this.clientPackageManager} install & bower install`)}`;
         }
         const injectDependenciesAndConstants = (err) => {
             if (err) {

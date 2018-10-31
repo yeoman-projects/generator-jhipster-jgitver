@@ -1,0 +1,7 @@
+plugins {
+    id "fr.brouillard.oss.gradle.jgitver" version "0.6.1"
+    //jhipster-needle-gradle-plugins - JHipster will add additional gradle plugins here
+}
+
+group = 'com.mycompany.myapp'
+version = '0.0.0'
