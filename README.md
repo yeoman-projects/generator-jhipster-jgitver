@@ -1,10 +1,14 @@
 # generator-jhipster-jgitver
-[![NPM version][npm-image]][npm-url] [![Build Status][travis-image]][travis-url] [![Dependency Status][daviddm-image]][daviddm-url]
+[![NPM version][npm-image]][npm-url]
+[![Build Status][travis-image]][travis-url]
+[![Dependency Status][daviddm-image]][daviddm-url]
 > JHipster module, Integration of JGitVer tool to jhipster project
 
 # Introduction
 
 This is a [JHipster](http://jhipster.github.io/) module, that is meant to be used in a JHipster application.
+This module is used to generate a default configuration for [jgitver](https://jgitver.github.io/).
+
 
 # Prerequisites
 
@@ -44,9 +48,15 @@ npm update -g generator-jhipster-jgitver
 
 # Usage
 
+To run the module on a JHipster generated application
+
+```bash
+yo jhipster-jgitver
+```
+
 # License
 
-Apache-2.0 © [Marc Saguer](https://github.com/MSaguer)
+Apache-2.0 © [Marc Saguer](https://github.com/MSaguer) and the respective contributors.
 
 
 [npm-image]: https://img.shields.io/npm/v/generator-jhipster-jgitver.svg
